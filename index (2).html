@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Gym Check-in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #08090a;
+    --surface:   #111214;
+    --border:    #222428;
+    --border2:   #2e3138;
+    --accent:    #c8f135;
+    --accent2:   #7ef7a0;
+    --text:      #eef0f3;
+    --muted:     #5a5f6b;
+    --danger:    #ff4d4d;
+    --warn:      #ffaa33;
+    --mono:      'DM Mono', monospace;
+    --display:   'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Grid de fondo */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* Glow accent */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(200,241,53,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .shell {
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 28px;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  h1 span { color: var(--accent); }
+
+  .sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 28px 24px;
+    position: relative;
+  }
+
+  /* Esquina decorativa */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -1px; right: -1px;
+    width: 24px; height: 24px;
+    border-top: 2px solid var(--accent);
+    border-right: 2px solid var(--accent);
+    border-radius: 0 4px 0 0;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: -1px;
+    width: 24px; height: 24px;
+    border-bottom: 2px solid var(--accent);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 0 0 4px;
+  }
+
+  /* Label */
+  .field-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .field-label::before {
+    content: '//';
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* Input PIN */
+  .pin-wrap {
+    position: relative;
+    margin-bottom: 6px;
+  }
+
+  input[type="tel"], input[type="text"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 16px 20px;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 28px;
+    letter-spacing: 8px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    caret-color: var(--accent);
+  }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200,241,53,0.08);
+  }
+
+  .hint {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  .hint strong { color: var(--text); }
+
+  /* Botones */
+  .btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  .btn:active::after { opacity: 0.05; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #08090a;
+    font-weight: 700;
+  }
+
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
+
+  .btn-checkin {
+    background: transparent;
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    margin-bottom: 10px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn-checkin:hover { background: rgba(126,247,160,0.06); }
+  .btn-checkin:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-out {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    font-size: 11px;
+    padding: 11px;
+  }
+
+  .btn-out:hover { border-color: var(--border2); color: var(--text); }
+
+  /* Nombre empleado */
+  .emp-name {
+    margin-bottom: 20px;
+  }
+
+  .emp-name .greeting {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .emp-name .name {
+    font-family: var(--display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 2px;
+    line-height: 1.1;
+  }
+
+  /* Resultado */
+  .result {
+    margin-top: 16px;
+    border-radius: 3px;
+    padding: 14px 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    display: none;
+    border-left: 3px solid;
+  }
+
+  .result.ok    { background: rgba(126,247,160,0.07); border-color: var(--accent2); color: var(--accent2); }
+  .result.warn  { background: rgba(255,170,51,0.07);  border-color: var(--warn);    color: var(--warn); }
+  .result.error { background: rgba(255,77,77,0.07);   border-color: var(--danger);  color: var(--danger); }
+
+  .result .r-title {
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  /* Divisor */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  /* Spinner */
+  .spin {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-top-color: #08090a;
+    border-radius: 50%;
+    animation: rot 0.7s linear infinite;
+    vertical-align: middle;
+  }
+
+  .spin-light {
+    border-color: rgba(126,247,160,0.2);
+    border-top-color: var(--accent2);
+  }
+
+  @keyframes rot { to { transform: rotate(360deg); } }
+
+  /* Screens */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Footer */
+  .footer {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  /* Pulse en el ícono GPS */
+  .pulse {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--accent2);
+    border-radius: 50%;
+    position: relative;
+  }
+
+  .pulse::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px solid var(--accent2);
+    animation: pulse 1.5s ease-out infinite;
+    opacity: 0;
+  }
+
+  @keyframes pulse {
+    0%   { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(2);   opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="header">
+    <div class="tag">Sistema interno</div>
+    <h1>GYM<br><span>CHECK-IN</span></h1>
+    <p class="sub">Registro de asistencia · GPS verificado</p>
+  </div>
+
+  <div class="card">
+
+    <!-- ── PANTALLA LOGIN ── -->
+    <div id="s-login" class="screen active">
+      <div class="field-label">Identificación</div>
+      <div class="pin-wrap">
+        <input type="tel" id="pin" maxlength="10"
+               placeholder="0000" inputmode="numeric" autocomplete="off"
+               onkeydown="if(event.key==='Enter') doLogin()">
+      </div>
+      <p class="hint">Tu PIN = <strong>00</strong> + número de empleado</p>
+      <button class="btn btn-primary" id="btn-login" onclick="doLogin()">
+        Acceder
+      </button>
+      <div class="result" id="login-err">
+        <div class="r-title">Error</div>
+        <div id="login-err-msg"></div>
+      </div>
+    </div>
+
+    <!-- ── PANTALLA HOME ── -->
+    <div id="s-home" class="screen">
+      <div class="emp-name">
+        <div class="greeting">Bienvenido</div>
+        <div class="name" id="emp-name-display">—</div>
+      </div>
+      <hr class="divider">
+      <button class="btn btn-checkin" id="btn-checkin" onclick="doCheckin()">
+        <span class="pulse"></span>
+        Registrar ubicación
+      </button>
+      <button class="btn btn-out" onclick="doLogout()">Cerrar sesión</button>
+      <div class="result" id="checkin-result">
+        <div class="r-title" id="cr-title"></div>
+        <div id="cr-msg"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">v1.0 · Solo para uso interno</div>
+</div>
+
+<script>
+  // ──────────────────────────────────────────────
+  //  CONFIGURACIÓN — pon aquí tu URL de Apps Script
+  // ──────────────────────────────────────────────
+  const API_URL = "https://script.google.com/macros/s/AKfycbwOXDMHVLtn9MHEKr3gKZuf_TyPUExLCy5TtEsv9EZvTi9LtzLac-IR7kNj2YEv00oR/exec";
+
+  let session = null;
+
+  // ── Llamada al backend (Apps Script como API REST) ──
+  async function callAPI(action, params = {}) {
+    const qs = new URLSearchParams({ action, ...params }).toString();
+    const res = await fetch(`${API_URL}?${qs}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
+  // ── Login ──
+  async function doLogin() {
+    const pin    = document.getElementById("pin").value.trim();
+    const btn    = document.getElementById("btn-login");
+    const errDiv = document.getElementById("login-err");
+
+    if (!pin) { showResult(errDiv, "error", "Ingresa tu PIN", ""); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> Verificando...';
+    errDiv.style.display = "none";
+
+    try {
+      const data = await callAPI("login", { pin });
+      if (data.ok) {
+        session = data;
+        document.getElementById("emp-name-display").textContent = data.nombre;
+        show("s-home");
+        document.getElementById("checkin-result").style.display = "none";
+      } else {
+        showResult(errDiv, "error", "Acceso denegado", data.msg);
+      }
+    } catch (e) {
+      showResult(errDiv, "error", "Sin conexión", e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Acceder";
+    }
+  }
+
+  // ── Check-in GPS ──
+  async function doCheckin() {
+    const btn = document.getElementById("btn-checkin");
+    const res = document.getElementById("checkin-result");
+
+    if (!navigator.geolocation) {
+      showResult(res, "error", "GPS no disponible", "Tu dispositivo no soporta geolocalización.");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin spin-light"></span> Obteniendo GPS...';
+    res.style.display = "none";
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        btn.innerHTML = '<span class="spin spin-light"></span> Guardando...';
+        try {
+          const data = await callAPI("registrar", {
+            pin: session.pin,
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+          if (data.ok) {
+            showResult(res,
+              data.valido ? "ok" : "warn",
+              data.valido ? "✓ Registrado" : "⚠ Registrado (fuera de rango)",
+              data.msg
+            );
+          } else {
+            showResult(res, "error", "Error", data.msg);
+          }
+        } catch (e) {
+          showResult(res, "error", "Error de red", e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<span class="pulse"></span> Registrar ubicación';
+        }
+      },
+      (err) => {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="pulse"></span> Registrar ubicación';
+        const msgs = {
+          1: "Permiso de ubicación denegado. Actívalo en tu navegador.",
+          2: "No se pudo obtener tu ubicación. Intenta al aire libre.",
+          3: "Tiempo de espera agotado. Intenta de nuevo.",
+        };
+        showResult(res, "error", "Error GPS", msgs[err.code] || err.message);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  }
+
+  // ── Logout ──
+  function doLogout() {
+    session = null;
+    document.getElementById("pin").value = "";
+    document.getElementById("login-err").style.display = "none";
+    show("s-login");
+  }
+
+  // ── Helpers ──
+  function show(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+
+  function showResult(el, tipo, title, msg) {
+    el.className = "result " + tipo;
+    el.querySelector(".r-title").textContent = title;
+    // El segundo div puede no existir en login-err, proteger
+    const msgEl = el.querySelector(":scope > div:last-child");
+    if (msgEl && msgEl !== el.querySelector(".r-title")) msgEl.textContent = msg;
+    el.style.display = "block";
+  }
+</script>
+</body>
+</html>
