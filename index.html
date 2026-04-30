@@ -415,18 +415,42 @@
 
 <script>
   // ──────────────────────────────────────────────
-  //  CONFIGURACIÓN — pon aquí tu URL de Apps Script
+  //  CONFIGURACIÓN
   // ──────────────────────────────────────────────
   const API_URL = "https://script.google.com/macros/s/AKfycbwOXDMHVLtn9MHEKr3gKZuf_TyPUExLCy5TtEsv9EZvTi9LtzLac-IR7kNj2YEv00oR/exec";
 
   let session = null;
+  let _cbCount = 0;
 
-  // ── Llamada al backend (Apps Script como API REST) ──
-  async function callAPI(action, params = {}) {
-    const qs = new URLSearchParams({ action, ...params }).toString();
-    const res = await fetch(`${API_URL}?${qs}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
+  // ── JSONP — evita CORS con Apps Script ──
+  function callAPI(action, params = {}) {
+    return new Promise((resolve, reject) => {
+      const cbName = "_cb" + (++_cbCount);
+      const timeout = setTimeout(() => {
+        delete window[cbName];
+        reject(new Error("Tiempo de espera agotado"));
+      }, 20000);
+
+      window[cbName] = function(data) {
+        clearTimeout(timeout);
+        delete window[cbName];
+        const tag = document.getElementById("jsonp-" + cbName);
+        if (tag) tag.remove();
+        resolve(data);
+      };
+
+      const qs = new URLSearchParams({ action, callback: cbName, ...params }).toString();
+      const tag = document.createElement("script");
+      tag.id = "jsonp-" + cbName;
+      tag.src = API_URL + "?" + qs;
+      tag.onerror = () => {
+        clearTimeout(timeout);
+        delete window[cbName];
+        tag.remove();
+        reject(new Error("Error de red al contactar el servidor"));
+      };
+      document.head.appendChild(tag);
+    });
   }
 
   // ── Login ──
