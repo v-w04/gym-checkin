@@ -44,13 +44,42 @@ const CONFIG = {
 };
 
 // ─────────────────────────────────────────────
-//  PUNTO DE ENTRADA — sirve la Web App
+//  PUNTO DE ENTRADA — API REST + fallback HTML
+//  ?action=login&pin=XXX
+//  ?action=registrar&pin=XXX&lat=YY&lng=ZZ
 // ─────────────────────────────────────────────
 function doGet(e) {
-  return HtmlService
-    .createHtmlOutput(getHtml())
-    .setTitle("Gym Check-in")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  const action = e && e.parameter && e.parameter.action;
+
+  // Sin action: sirve el HTML embebido (acceso directo a la URL de Apps Script)
+  if (!action) {
+    return HtmlService
+      .createHtmlOutput(getHtml())
+      .setTitle("Gym Check-in")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
+  // API REST — llamado desde GitHub Pages
+  let result;
+  try {
+    if (action === "login") {
+      result = login(e.parameter.pin);
+    } else if (action === "registrar") {
+      result = registrarUbicacion(
+        e.parameter.pin,
+        parseFloat(e.parameter.lat),
+        parseFloat(e.parameter.lng)
+      );
+    } else {
+      result = { ok: false, msg: "Accion desconocida: " + action };
+    }
+  } catch (err) {
+    result = { ok: false, msg: "Error interno: " + err.message };
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 // ─────────────────────────────────────────────
