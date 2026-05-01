@@ -497,7 +497,7 @@
         btn.innerHTML = '<span class="spin"></span> Guardando...';
         try {
           const data = await callAPI("registrar", { pin: session.pin, lat: pos.coords.latitude, lng: pos.coords.longitude });
-          if (data.ok) showResult(res, data.valido ? "ok" : "warn", data.valido ? "Registro exitoso" : "Registrado · Fuera de rango", data.msg, data.mapsUrl);
+          if (data.ok) showResult(res, data.primero ? "warn" : "ok", data.primero ? "Primer registro" : "Registro exitoso", data.msg, data.mapsUrl);
           else showResult(res, "error", "Error", data.msg);
         } catch(e) { showResult(res, "error", "Error de red", e.message); }
         finally { btn.disabled = false; btn.innerHTML = '<span class="gps-dot"></span> Registrar ubicación'; }
