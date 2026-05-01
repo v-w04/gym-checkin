@@ -269,6 +269,21 @@
 
   .result-msg { font-size: 13px; color: var(--body-color); line-height: 1.5; }
 
+  .maps-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--primary);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(218,41,28,0.3);
+    padding-bottom: 1px;
+  }
+
   /* ─── Spinner ─── */
   .spin {
     width: 14px; height: 14px; flex-shrink: 0;
@@ -384,6 +399,9 @@
     <div class="result" id="checkin-result">
       <div class="result-title" id="cr-title"></div>
       <div class="result-msg" id="cr-msg"></div>
+      <a class="maps-link" id="cr-maps" href="#" target="_blank" style="display:none">
+        📍 Ver ubicación en Maps
+      </a>
     </div>
     <div class="panel-label">Ubicación GPS</div>
     <div class="panel">
@@ -479,7 +497,7 @@
         btn.innerHTML = '<span class="spin"></span> Guardando...';
         try {
           const data = await callAPI("registrar", { pin: session.pin, lat: pos.coords.latitude, lng: pos.coords.longitude });
-          if (data.ok) showResult(res, data.valido ? "ok" : "warn", data.valido ? "Registro exitoso" : "Registrado · Fuera de rango", data.msg);
+          if (data.ok) showResult(res, data.valido ? "ok" : "warn", data.valido ? "Registro exitoso" : "Registrado · Fuera de rango", data.msg, data.mapsUrl);
           else showResult(res, "error", "Error", data.msg);
         } catch(e) { showResult(res, "error", "Error de red", e.message); }
         finally { btn.disabled = false; btn.innerHTML = '<span class="gps-dot"></span> Registrar ubicación'; }
@@ -506,10 +524,19 @@
     document.getElementById(id).classList.add("active");
   }
 
-  function showResult(el, tipo, title, msg) {
+  function showResult(el, tipo, title, msg, mapsUrl) {
     el.className = "result " + tipo;
     el.querySelector(".result-title").textContent = title;
     el.querySelector(".result-msg").textContent = msg;
+    const mapsLink = el.querySelector(".maps-link");
+    if (mapsLink) {
+      if (mapsUrl) {
+        mapsLink.href = mapsUrl;
+        mapsLink.style.display = "inline-flex";
+      } else {
+        mapsLink.style.display = "none";
+      }
+    }
     el.style.display = "block";
   }
 </script>
