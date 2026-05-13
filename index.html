@@ -269,6 +269,45 @@
 
   .result-msg { font-size: 13px; color: var(--body-color); line-height: 1.5; }
 
+  .processing-box {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: var(--sp-md);
+    background: var(--canvas-elevated);
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-top: var(--sp-xs);
+  }
+
+  .proc-msg {
+    font-size: 13px;
+    color: var(--body-color);
+    letter-spacing: 0.04em;
+  }
+
+  .countdown-bar {
+    height: 3px;
+    background: var(--hairline);
+    margin-top: var(--sp-sm);
+    overflow: hidden;
+  }
+
+  .countdown-fill {
+    height: 100%;
+    background: var(--primary);
+    width: 100%;
+    transition: width 1s linear;
+  }
+
+  .countdown-txt {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: var(--sp-xxs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
   .maps-link {
     display: inline-flex;
     align-items: center;
@@ -390,27 +429,31 @@
     </div>
   </div>
 
-  <!-- HOME -->
-  <div id="s-home" class="screen">
+  <!-- PROCESANDO -->
+  <div id="s-processing" class="screen">
     <div class="emp-block">
       <div class="emp-greeting">Empleado verificado</div>
       <div class="emp-name" id="emp-name-display">—</div>
     </div>
-    <div class="result" id="checkin-result">
+    <div class="processing-box">
+      <span class="spin spin-dark" id="proc-spinner"></span>
+      <span class="proc-msg" id="proc-msg">Obteniendo ubicación...</span>
+    </div>
+  </div>
+
+  <!-- RESULTADO -->
+  <div id="s-result" class="screen">
+    <div class="result" id="checkin-result" style="display:block; margin-top:0">
       <div class="result-title" id="cr-title"></div>
       <div class="result-msg" id="cr-msg"></div>
       <a class="maps-link" id="cr-maps" href="#" target="_blank" style="display:none">
         📍 Ver ubicación en Maps
       </a>
     </div>
-    <div class="panel-label">Ubicación GPS</div>
-    <div class="panel">
-      <button class="btn btn-primary" id="btn-checkin" onclick="doCheckin()">
-        <span class="gps-dot"></span>
-        Registrar ubicación
-      </button>
-      <button class="btn btn-outline" onclick="doLogout()">Cerrar sesión</button>
+    <div class="countdown-bar">
+      <div class="countdown-fill" id="countdown-fill"></div>
     </div>
+    <p class="countdown-txt" id="countdown-txt">Regresando en 5...</p>
   </div>
 </main>
 
@@ -428,89 +471,121 @@
       const cbName = "_cb" + (++_cbCount);
       const timeout = setTimeout(() => {
         delete window[cbName];
-        const el = document.getElementById("jsonp-" + cbName);
-        if (el) el.remove();
-        reject(new Error("Tiempo agotado — verifica tu conexión"));
+        document.getElementById("jsonp-" + cbName)?.remove();
+        reject(new Error("Tiempo de espera agotado"));
       }, 25000);
-
       window[cbName] = (data) => {
         clearTimeout(timeout);
         delete window[cbName];
         document.getElementById("jsonp-" + cbName)?.remove();
         resolve(data);
       };
-
-      const qs = new URLSearchParams({ action, callback: cbName, ...params }).toString();
       const tag = document.createElement("script");
       tag.id = "jsonp-" + cbName;
-      // Apps Script redirige: necesitamos la URL con /exec al final sin trailing slash
-      tag.src = API_URL + "?" + qs;
-      tag.crossOrigin = "anonymous";
-      tag.onerror = (e) => {
+      tag.src = API_URL + "?" + new URLSearchParams({ action, callback: cbName, ...params });
+      tag.onerror = () => {
         clearTimeout(timeout);
-        delete window[cbName];
-        tag.remove();
-        // En móvil el script error puede ser por redirect de Google — intentar igual
-        // el callback puede haber llegado antes del error
-        setTimeout(() => {
-          if (window[cbName]) {
-            reject(new Error("Error cargando respuesta del servidor"));
-          }
-          // si ya se resolvió via callback, no hacer nada
-        }, 500);
+        setTimeout(() => { if (window[cbName]) reject(new Error("Error de red")); }, 500);
       };
       document.head.appendChild(tag);
     });
   }
 
+  // LOGIN → dispara GPS automáticamente
   async function doLogin() {
     const pin = document.getElementById("pin").value.trim();
     const btn = document.getElementById("btn-login");
-    const err = document.getElementById("login-err");
-    if (!pin) { showResult(err, "error", "Error de acceso", "Ingresa tu PIN para continuar."); return; }
+    if (!pin) { showLoginErr("Ingresa tu PIN para continuar."); return; }
+
     btn.disabled = true;
     btn.innerHTML = '<span class="spin"></span> Verificando...';
-    err.style.display = "none";
+    document.getElementById("login-err").style.display = "none";
+
     try {
       const data = await callAPI("login", { pin });
       if (data.ok) {
         session = data;
         document.getElementById("emp-name-display").textContent = data.nombre;
-        document.getElementById("checkin-result").style.display = "none";
-        show("s-home");
+        show("s-processing");
+        doCheckinAuto();
       } else {
-        showResult(err, "error", "Acceso denegado", data.msg);
+        showLoginErr(data.msg);
       }
-    } catch(e) { showResult(err, "error", "Sin conexión", e.message); }
-    finally { btn.disabled = false; btn.textContent = "Acceder"; }
+    } catch(e) {
+      showLoginErr("Sin conexión: " + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Acceder";
+    }
   }
 
-  async function doCheckin() {
-    const btn = document.getElementById("btn-checkin");
-    const res = document.getElementById("checkin-result");
-    if (!navigator.geolocation) { showResult(res, "error", "GPS no disponible", "Tu dispositivo no soporta geolocalización."); return; }
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span> Obteniendo GPS...';
-    res.style.display = "none";
+  // GPS + registro automático
+  function doCheckinAuto() {
+    if (!navigator.geolocation) {
+      mostrarResultado("error", "GPS no disponible", "Tu dispositivo no soporta geolocalización.", null);
+      return;
+    }
+    setProc("Obteniendo ubicación GPS...");
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        btn.innerHTML = '<span class="spin"></span> Guardando...';
+        setProc("Verificando y guardando...");
         try {
-          const data = await callAPI("registrar", { pin: session.pin, lat: pos.coords.latitude, lng: pos.coords.longitude });
-          if (data.ok) showResult(res, data.primero ? "warn" : "ok", data.primero ? "Primer registro" : "Registro exitoso", data.msg, data.mapsUrl);
-          else showResult(res, "error", "Error", data.msg);
-        } catch(e) { showResult(res, "error", "Error de red", e.message); }
-        finally { btn.disabled = false; btn.innerHTML = '<span class="gps-dot"></span> Registrar ubicación'; }
+          const data = await callAPI("registrar", {
+            pin: session.pin,
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+          if (data.ok) {
+            mostrarResultado(
+              data.primero ? "warn" : "ok",
+              data.primero ? "Primer registro" : "Registro exitoso",
+              data.msg, data.mapsUrl
+            );
+          } else {
+            mostrarResultado("error", "No registrado", data.msg, null);
+          }
+        } catch(e) {
+          mostrarResultado("error", "Error de red", e.message, null);
+        }
       },
-      (err) => {
-        btn.disabled = false;
-        btn.innerHTML = '<span class="gps-dot"></span> Registrar ubicación';
-        const msgs = { 1:"Permiso denegado. Actívalo en tu navegador.", 2:"No se pudo obtener ubicación. Intenta al aire libre.", 3:"Tiempo agotado. Intenta de nuevo." };
-        showResult(res, "error", "Error GPS", msgs[err.code] || err.message);
+      (gpsErr) => {
+        const msgs = {
+          1: "Permiso de ubicación denegado. Actívalo en tu navegador.",
+          2: "No se pudo obtener la ubicación. Intenta al aire libre.",
+          3: "Tiempo de espera GPS agotado. Intenta de nuevo.",
+        };
+        mostrarResultado("error", "Error GPS", msgs[gpsErr.code] || gpsErr.message, null);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   }
+
+  // Muestra resultado + countdown regresa solo
+  function mostrarResultado(tipo, title, msg, mapsUrl) {
+    const res      = document.getElementById("checkin-result");
+    const mapsLink = document.getElementById("cr-maps");
+    res.className  = "result " + tipo;
+    document.getElementById("cr-title").textContent = title;
+    document.getElementById("cr-msg").textContent   = msg;
+    if (mapsUrl) { mapsLink.href = mapsUrl; mapsLink.style.display = "inline-flex"; }
+    else { mapsLink.style.display = "none"; }
+    show("s-result");
+
+    // Countdown 5 segundos
+    let seg = 5;
+    const fill = document.getElementById("countdown-fill");
+    const txt  = document.getElementById("countdown-txt");
+    txt.textContent  = "Regresando en " + seg + "...";
+    fill.style.width = "100%";
+    const iv = setInterval(() => {
+      seg--;
+      txt.textContent  = seg > 0 ? "Regresando en " + seg + "..." : "Regresando...";
+      fill.style.width = (seg / 5 * 100) + "%";
+      if (seg <= 0) { clearInterval(iv); doLogout(); }
+    }, 1000);
+  }
+
+  function setProc(msg) { document.getElementById("proc-msg").textContent = msg; }
 
   function doLogout() {
     session = null;
@@ -524,20 +599,12 @@
     document.getElementById(id).classList.add("active");
   }
 
-  function showResult(el, tipo, title, msg, mapsUrl) {
-    el.className = "result " + tipo;
-    el.querySelector(".result-title").textContent = title;
-    el.querySelector(".result-msg").textContent = msg;
-    const mapsLink = el.querySelector(".maps-link");
-    if (mapsLink) {
-      if (mapsUrl) {
-        mapsLink.href = mapsUrl;
-        mapsLink.style.display = "inline-flex";
-      } else {
-        mapsLink.style.display = "none";
-      }
-    }
-    el.style.display = "block";
+  function showLoginErr(msg) {
+    const err = document.getElementById("login-err");
+    err.className = "result error";
+    err.querySelector(".result-title").textContent = "Error de acceso";
+    err.querySelector(".result-msg").textContent   = msg;
+    err.style.display = "block";
   }
 </script>
 </body>
