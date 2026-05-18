@@ -153,10 +153,7 @@
         📍 Ver ubicación en Maps
       </a>
     </div>
-    <button id="btn-agregar" class="btn btn-secondary" style="display:none; margin-top:16px"
-            onclick="confirmarAgregarUbicacion()">
-      📍 Registrar como nueva ubicación de gym
-    </button>
+
     <div class="countdown-bar" style="margin-top:12px; display:none" id="countdown-wrap">
       <div class="countdown-fill" id="countdown-fill"></div>
     </div>
@@ -175,7 +172,7 @@
 
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbwOXDMHVLtn9MHEKr3gKZuf_TyPUExLCy5TtEsv9EZvTi9LtzLac-IR7kNj2YEv00oR/exec";
-  let session = null, _cbCount = 0, _posGuardada = null;
+  let session = null, _cbCount = 0;
 
   function callAPI(action, params = {}) {
     return new Promise((resolve, reject) => {
@@ -229,13 +226,12 @@
 
   function doCheckinAuto() {
     if (!navigator.geolocation) {
-      mostrarResultado("error", "GPS no disponible", "Tu dispositivo no soporta geolocalización.", null, false);
+      mostrarResultado("error", "GPS no disponible", "Tu dispositivo no soporta geolocalización.", null);
       return;
     }
     setProc("Obteniendo ubicación GPS...");
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        _posGuardada = pos;
         setProc("Verificando y guardando...");
         try {
           const data = await callAPI("registrar", {
@@ -246,49 +242,25 @@
           if (data.ok) {
             mostrarResultado(data.primero ? "warn" : "ok",
               data.primero ? "Primer registro" : "Registro exitoso",
-              data.msg, data.mapsUrl, false);
+              data.msg, data.mapsUrl);
           } else {
-            const puedeAgregar = data.fueraDeRango && data.puedeAgregar;
-            mostrarResultado("error", "No registrado", data.msg, null, puedeAgregar);
+            mostrarResultado("error", "No registrado", data.msg, null);
           }
         } catch(e) {
-          mostrarResultado("error", "Error de red", e.message, null, false);
+          mostrarResultado("error", "Error de red", e.message, null);
         }
       },
       (gpsErr) => {
         const msgs = { 1:"Permiso denegado. Actívalo en tu navegador.", 2:"No se pudo obtener ubicación. Intenta al aire libre.", 3:"Tiempo GPS agotado. Intenta de nuevo." };
-        mostrarResultado("error", "Error GPS", msgs[gpsErr.code] || gpsErr.message, null, false);
+        mostrarResultado("error", "Error GPS", msgs[gpsErr.code] || gpsErr.message, null);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   }
 
-  function confirmarAgregarUbicacion() {
-    if (!_posGuardada) return;
-    agregarUbicacion(_posGuardada);
-  }
-
-  async function agregarUbicacion(pos) {
-    show("s-processing");
-    setProc("Registrando nueva ubicación de gym...");
-    try {
-      const data = await callAPI("agregarUbicacion", {
-        pin: session.pin,
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-      });
-      mostrarResultado(data.ok ? "ok" : "error",
-        data.ok ? "Ubicación registrada" : "Error",
-        data.msg, data.mapsUrl || null, false);
-    } catch(e) {
-      mostrarResultado("error", "Error de red", e.message, null, false);
-    }
-  }
-
-  function mostrarResultado(tipo, title, msg, mapsUrl, puedeAgregar) {
+  function mostrarResultado(tipo, title, msg, mapsUrl) {
     const res        = document.getElementById("checkin-result");
     const mapsLink   = document.getElementById("cr-maps");
-    const btnAgregar = document.getElementById("btn-agregar");
     const countWrap  = document.getElementById("countdown-wrap");
 
     res.className = "result " + tipo;
@@ -298,7 +270,6 @@
     if (mapsUrl) { mapsLink.href = mapsUrl; mapsLink.style.display = "inline-flex"; }
     else { mapsLink.style.display = "none"; }
 
-    btnAgregar.style.display = puedeAgregar ? "flex" : "none";
     show("s-result");
 
     if (tipo === "ok" || tipo === "warn") {
@@ -323,7 +294,7 @@
   function setProc(msg) { document.getElementById("proc-msg").textContent = msg; }
 
   function doLogout() {
-    session = null; _posGuardada = null;
+    session = null;
     document.getElementById("pin").value = "";
     document.getElementById("login-err").style.display = "none";
     show("s-login");
