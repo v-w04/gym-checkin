@@ -3,384 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>GYM CHECK-IN</title>
+<title>GYM CHECK-IN · Electronics México</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --canvas:          #181818;
-    --canvas-elevated: #303030;
-    --primary:         #da291c;
-    --primary-active:  #b01e0a;
-    --ink:             #ffffff;
-    --body-color:      #969696;
-    --muted:           #666666;
-    --hairline:        #303030;
-    --on-primary:      #ffffff;
-    --success:         #03904a;
-    --warning-color:   #f13a2c;
-
-    --sp-xxs: 8px;
-    --sp-xs:  16px;
-    --sp-sm:  24px;
-    --sp-md:  32px;
-    --sp-lg:  48px;
-    --sp-xl:  64px;
-    --sp-xxl: 96px;
-
+    --canvas: #181818; --canvas-elevated: #303030;
+    --primary: #da291c; --primary-active: #b01e0a;
+    --ink: #ffffff; --body-color: #969696; --muted: #666666;
+    --hairline: #303030; --on-primary: #ffffff;
+    --success: #03904a; --warning-color: #f13a2c;
+    --sp-xxs:8px; --sp-xs:16px; --sp-sm:24px; --sp-md:32px; --sp-lg:48px; --sp-xl:64px; --sp-xxl:96px;
     --font: 'Inter', -apple-system, system-ui, sans-serif;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; background: var(--canvas); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+  html, body { min-height: 100dvh; background: var(--canvas); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; }
 
-  /* ─── HERO ─── */
-  .hero {
-    position: relative;
-    width: 100%;
-    height: 35vh;
-    min-height: 200px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-  }
-
-  .hero-bg {
-    position: absolute; inset: 0;
-    background: linear-gradient(160deg, #0e0b0b 0%, #1e0f0c 40%, #241210 70%, #181818 100%);
-  }
-
-  .hero-bg::before {
-    content: '';
-    position: absolute; inset: 0;
-    background-image: repeating-linear-gradient(
-      -55deg, transparent, transparent 48px,
-      rgba(255,255,255,0.013) 48px, rgba(255,255,255,0.013) 49px
-    );
-  }
-
-  .hero-bg::after {
-    content: '';
-    position: absolute;
-    bottom: -80px; right: -80px;
-    width: 600px; height: 500px;
-    background: radial-gradient(ellipse, rgba(218,41,28,0.22) 0%, transparent 62%);
-  }
-
-  .hero-number {
-    position: absolute;
-    top: 50%; right: -8px;
-    transform: translateY(-55%);
-    font-size: clamp(80px, 22vw, 320px);
-    font-weight: 700;
-    line-height: 1;
-    color: transparent;
-    -webkit-text-stroke: 1px rgba(218,41,28,0.12);
-    letter-spacing: -0.04em;
-    pointer-events: none;
-    user-select: none;
-    z-index: 1;
-  }
-
-  .nav {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 var(--sp-md);
-    z-index: 10;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-  }
-
+  .hero { position: relative; width: 100%; height: 35vh; min-height: 200px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
+  .hero-bg { position: absolute; inset: 0; background: linear-gradient(160deg, #0e0b0b 0%, #1e0f0c 40%, #241210 70%, #181818 100%); }
+  .hero-bg::before { content: ''; position: absolute; inset: 0; background-image: repeating-linear-gradient(-55deg, transparent, transparent 48px, rgba(255,255,255,0.013) 48px, rgba(255,255,255,0.013) 49px); }
+  .hero-bg::after { content: ''; position: absolute; bottom: -80px; right: -80px; width: 600px; height: 500px; background: radial-gradient(ellipse, rgba(218,41,28,0.22) 0%, transparent 62%); }
+  .hero-number { position: absolute; top: 50%; right: -8px; transform: translateY(-55%); font-size: clamp(80px, 22vw, 320px); font-weight: 700; line-height: 1; color: transparent; -webkit-text-stroke: 1px rgba(218,41,28,0.12); letter-spacing: -0.04em; pointer-events: none; user-select: none; z-index: 1; }
+  .nav { position: absolute; top: 0; left: 0; right: 0; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--sp-md); z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.06); }
   .nav-left { display: flex; align-items: center; gap: var(--sp-xxs); }
+  .nav-icon { width: 28px; height: 28px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .nav-brand { font-size: 11px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: var(--ink); }
+  .nav-tag { font-size: 11px; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase; color: var(--muted); }
+  .hero-copy { position: relative; z-index: 5; padding: var(--sp-sm) var(--sp-md) var(--sp-xs); }
+  .hero-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase; color: var(--primary); margin-bottom: var(--sp-xxs); }
+  .hero-h1 { font-size: clamp(26px, 6vw, 56px); font-weight: 500; line-height: 1.05; letter-spacing: -0.02em; color: var(--ink); }
+  .hero-line { position: absolute; left: var(--sp-md); bottom: 0; width: 1px; height: 48px; background: linear-gradient(180deg, var(--primary), transparent); z-index: 5; }
 
-  .nav-icon {
-    width: 28px; height: 28px;
-    background: var(--primary);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-
-  .nav-brand {
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 1.4px; text-transform: uppercase;
-    color: var(--ink);
-  }
-
-  .nav-tag {
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 1.1px; text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .hero-copy {
-    position: relative; z-index: 5;
-    padding: var(--sp-sm) var(--sp-md) var(--sp-xs);
-  }
-
-  .hero-eyebrow {
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 1.1px; text-transform: uppercase;
-    color: var(--primary); margin-bottom: var(--sp-xxs);
-  }
-
-  .hero-h1 {
-    font-size: clamp(26px, 6vw, 56px);
-    font-weight: 500; line-height: 1.05;
-    letter-spacing: -0.02em; color: var(--ink);
-  }
-
-  .hero-line {
-    position: absolute;
-    left: var(--sp-md); bottom: 0;
-    width: 1px; height: 48px;
-    background: linear-gradient(180deg, var(--primary), transparent);
-    z-index: 5;
-  }
-
-  /* ─── MAIN ─── */
-  .main {
-    background: var(--canvas);
-    padding: var(--sp-md) var(--sp-md) var(--sp-xl);
-    position: relative;
-  }
-
-  .main-accent {
-    width: 40px; height: 2px;
-    background: var(--primary);
-    margin-bottom: var(--sp-md);
-  }
-
+  .main { background: var(--canvas); padding: var(--sp-md) var(--sp-md) var(--sp-xl); position: relative; }
+  .main-accent { width: 40px; height: 2px; background: var(--primary); margin-bottom: var(--sp-md); }
   .screen { display: none; }
   .screen.active { display: block; }
 
-  /* ─── Panel ─── */
-  .panel-label {
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 1.1px; text-transform: uppercase;
-    color: var(--muted); margin-bottom: var(--sp-xs);
-  }
+  .panel-label { font-size: 11px; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase; color: var(--muted); margin-bottom: var(--sp-xs); }
+  .panel { background: var(--canvas-elevated); border: 1px solid rgba(255,255,255,0.06); padding: var(--sp-md); }
 
-  .panel {
-    background: var(--canvas-elevated);
-    border: 1px solid rgba(255,255,255,0.06);
-    padding: var(--sp-md);
-  }
-
-  /* ─── Input ─── */
-  .pin-input {
-    width: 100%;
-    background: var(--canvas);
-    border: 1px solid var(--hairline);
-    border-radius: 4px;
-    padding: 14px 16px;
-    color: var(--ink);
-    font-family: var(--font);
-    font-size: 22px; font-weight: 500;
-    letter-spacing: 5px; text-align: center;
-    outline: none;
-    transition: border-color 0.15s;
-    caret-color: var(--primary);
-    -webkit-appearance: none;
-  }
-
+  .pin-input { width: 100%; background: var(--canvas); border: 1px solid var(--hairline); border-radius: 4px; padding: 14px 16px; color: var(--ink); font-family: var(--font); font-size: 22px; font-weight: 500; letter-spacing: 5px; text-align: center; outline: none; transition: border-color 0.15s; caret-color: var(--primary); -webkit-appearance: none; }
   .pin-input::placeholder { color: var(--muted); letter-spacing: 1px; font-size: 13px; }
   .pin-input:focus { border-color: var(--primary); }
+  .field-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: var(--sp-xxs); margin-bottom: var(--sp-sm); }
 
-  .field-hint {
-    font-size: 12px; color: var(--muted);
-    text-align: center;
-    margin-top: var(--sp-xxs);
-    margin-bottom: var(--sp-sm);
-    line-height: 1.5;
-  }
-
-  /* ─── Botones ─── */
-  .btn {
-    display: flex; align-items: center; justify-content: center;
-    gap: var(--sp-xxs);
-    width: 100%; height: 48px;
-    padding: 0 var(--sp-md);
-    border: none; border-radius: 0;
-    font-family: var(--font);
-    font-size: 14px; font-weight: 700;
-    letter-spacing: 1.4px; text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.1s, opacity 0.1s;
-  }
-
+  .btn { display: flex; align-items: center; justify-content: center; gap: var(--sp-xxs); width: 100%; height: 48px; padding: 0 var(--sp-md); border: none; border-radius: 0; font-family: var(--font); font-size: 14px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; cursor: pointer; transition: background 0.1s, opacity 0.1s; }
   .btn-primary { background: var(--primary); color: var(--on-primary); }
   .btn-primary:active { background: var(--primary-active); }
   .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary { background: transparent; color: var(--ink); border: 1px solid rgba(255,255,255,0.18); font-size: 12px; letter-spacing: 1.1px; margin-top: var(--sp-xxs); }
+  .btn-secondary:active { background: rgba(255,255,255,0.04); }
 
-  .btn-outline {
-    background: transparent; color: var(--ink);
-    border: 1px solid rgba(255,255,255,0.18);
-    margin-top: var(--sp-xxs);
-    font-size: 12px; letter-spacing: 1.1px;
-  }
-
-  .btn-outline:active { background: rgba(255,255,255,0.04); }
-
-  /* ─── Empleado ─── */
-  .emp-block {
-    margin-bottom: var(--sp-md);
-    padding-bottom: var(--sp-md);
-    border-bottom: 1px solid var(--hairline);
-  }
-
-  .emp-greeting {
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 1.1px; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 4px;
-  }
-
-  .emp-name {
-    font-size: clamp(20px, 5vw, 26px);
-    font-weight: 500; line-height: 1.2;
-    letter-spacing: -0.01em; color: var(--ink);
-  }
-
-  /* ─── Resultado ─── */
-  .result {
-    margin-top: var(--sp-sm);
-    padding: var(--sp-xs) var(--sp-sm);
-    display: none;
-    border-left: 2px solid;
-  }
-
+  .result { margin-top: var(--sp-sm); padding: var(--sp-xs) var(--sp-sm); display: none; border-left: 2px solid; }
   .result.ok    { border-color: var(--success);        background: rgba(3,144,74,0.07); }
   .result.warn  { border-color: #ffaa33;               background: rgba(255,170,51,0.07); }
   .result.error { border-color: var(--warning-color);  background: rgba(241,58,44,0.07); }
-
-  .result-title {
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 1.1px; text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
+  .result-title { font-size: 11px; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase; margin-bottom: 4px; }
   .result.ok    .result-title { color: #2ec97e; }
   .result.warn  .result-title { color: #ffaa33; }
   .result.error .result-title { color: var(--warning-color); }
-
   .result-msg { font-size: 13px; color: var(--body-color); line-height: 1.5; }
 
-  .processing-box {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-sm);
-    padding: var(--sp-md);
-    background: var(--canvas-elevated);
-    border: 1px solid rgba(255,255,255,0.06);
-    margin-top: var(--sp-xs);
-  }
+  .processing-box { display: flex; align-items: center; gap: var(--sp-sm); padding: var(--sp-md); background: var(--canvas-elevated); border: 1px solid rgba(255,255,255,0.06); margin-top: var(--sp-xs); }
+  .proc-text { font-size: 14px; color: var(--muted); }
+  .proc-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
 
-  .proc-msg {
-    font-size: 13px;
-    color: var(--body-color);
-    letter-spacing: 0.04em;
-  }
+  .maps-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--primary); text-decoration: none; border-bottom: 1px solid rgba(218,41,28,0.3); padding-bottom: 1px; }
 
-  .countdown-bar {
-    height: 3px;
-    background: var(--hairline);
-    margin-top: var(--sp-sm);
-    overflow: hidden;
-  }
+  .countdown-bar { height: 3px; background: var(--hairline); margin-top: var(--sp-sm); overflow: hidden; }
+  .countdown-fill { height: 100%; background: var(--primary); width: 100%; transition: width 1s linear; }
+  .countdown-txt { font-size: 11px; color: var(--muted); text-align: center; margin-top: var(--sp-xxs); letter-spacing: 0.08em; text-transform: uppercase; }
 
-  .countdown-fill {
-    height: 100%;
-    background: var(--primary);
-    width: 100%;
-    transition: width 1s linear;
-  }
+  .spin { width: 14px; height: 14px; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.25); border-top-color: var(--on-primary); border-radius: 50%; animation: rot 0.7s linear infinite; }
+  .gps-dot { width: 8px; height: 8px; flex-shrink: 0; background: var(--on-primary); border-radius: 50%; position: relative; }
 
-  .countdown-txt {
-    font-size: 11px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: var(--sp-xxs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .maps-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: var(--primary);
-    text-decoration: none;
-    border-bottom: 1px solid rgba(218,41,28,0.3);
-    padding-bottom: 1px;
-  }
-
-  /* ─── Spinner ─── */
-  .spin {
-    width: 14px; height: 14px; flex-shrink: 0;
-    border: 2px solid rgba(255,255,255,0.25);
-    border-top-color: var(--on-primary);
-    border-radius: 50%;
-    animation: rot 0.7s linear infinite;
-  }
-
-  @keyframes rot { to { transform: rotate(360deg); } }
-
-  .gps-dot {
-    width: 8px; height: 8px; flex-shrink: 0;
-    background: var(--on-primary);
-    border-radius: 50%; position: relative;
-  }
-
-  .gps-dot::before {
-    content: '';
-    position: absolute; inset: -5px;
-    border-radius: 50%;
-    border: 1px solid var(--on-primary);
-    animation: gps-pulse 1.6s ease-out infinite;
-    opacity: 0;
-  }
-
-  @keyframes gps-pulse {
-    0%   { transform: scale(0.7); opacity: 0.8; }
-    100% { transform: scale(2.2); opacity: 0; }
-  }
-
-  /* ─── Footer ─── */
-  .footer {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    padding: var(--sp-xs) var(--sp-md);
-    border-top: 1px solid var(--hairline);
-    background: var(--canvas);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; padding: var(--sp-xs) var(--sp-md); border-top: 1px solid var(--hairline); background: var(--canvas); display: flex; align-items: center; justify-content: space-between; }
   .footer-text { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
   .footer-dot { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; }
 
-  /* ─── Desktop split ─── */
+  @keyframes rot { to { transform: rotate(360deg); } }
+
   @media (min-width: 1024px) {
-    .hero {
-      position: fixed; top: 0; left: 0;
-      width: 52%; height: 100dvh;
-    }
-
+    .hero { position: fixed; top: 0; left: 0; width: 52%; height: 100dvh; }
     .hero-number { font-size: clamp(200px, 22vw, 340px); }
-
-    .main {
-      margin-left: 52%; min-height: 100dvh;
-      display: flex; flex-direction: column; justify-content: center;
-      padding: var(--sp-xxl) var(--sp-xl) 100px;
-    }
-
+    .main { margin-left: 52%; min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: var(--sp-xxl) var(--sp-xl) 100px; }
     .main-accent { display: none; }
     .footer { left: 52%; }
     .nav { padding: 0 var(--sp-xl); }
@@ -394,7 +100,6 @@
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="hero-number">GYM</div>
-
   <nav class="nav">
     <div class="nav-left">
       <div class="nav-icon">🏋️</div>
@@ -402,7 +107,6 @@
     </div>
     <span class="nav-tag">Uso interno</span>
   </nav>
-
   <div class="hero-copy">
     <p class="hero-eyebrow">Electronics México · Registro de asistencia</p>
     <h1 class="hero-h1">GYM<br>CHECK-IN</h1>
@@ -420,7 +124,7 @@
       <input class="pin-input" type="tel" id="pin" maxlength="10"
              placeholder="Ingresa tu PIN" inputmode="numeric" autocomplete="off"
              onkeydown="if(event.key==='Enter') doLogin()">
-      <p class="field-hint">PIN = 00 + número de empleado<br>Ej: 001 · 0025 · 0038</p>
+      <p class="field-hint">00 + número de empleado &nbsp;·&nbsp; Ej: 001, 0025</p>
       <button class="btn btn-primary" id="btn-login" onclick="doLogin()">Acceder</button>
     </div>
     <div class="result" id="login-err">
@@ -431,13 +135,12 @@
 
   <!-- PROCESANDO -->
   <div id="s-processing" class="screen">
-    <div class="emp-block">
-      <div class="emp-greeting">Empleado verificado</div>
-      <div class="emp-name" id="emp-name-display">—</div>
-    </div>
     <div class="processing-box">
-      <span class="spin spin-dark" id="proc-spinner"></span>
-      <span class="proc-msg" id="proc-msg">Obteniendo ubicación...</span>
+      <div class="spin"></div>
+      <div>
+        <div class="proc-title">Procesando...</div>
+        <div class="proc-text" id="proc-msg">Verificando...</div>
+      </div>
     </div>
   </div>
 
@@ -450,11 +153,19 @@
         📍 Ver ubicación en Maps
       </a>
     </div>
-    <div class="countdown-bar">
+    <button id="btn-agregar" class="btn btn-secondary" style="display:none; margin-top:16px"
+            onclick="confirmarAgregarUbicacion()">
+      📍 Registrar como nueva ubicación de gym
+    </button>
+    <div class="countdown-bar" style="margin-top:12px; display:none" id="countdown-wrap">
       <div class="countdown-fill" id="countdown-fill"></div>
     </div>
-    <p class="countdown-txt" id="countdown-txt">Regresando en 5...</p>
+    <p class="countdown-txt" id="countdown-txt"></p>
+    <button class="btn btn-secondary" style="margin-top:16px" onclick="doLogout()">
+      Volver al inicio
+    </button>
   </div>
+
 </main>
 
 <footer class="footer">
@@ -464,7 +175,7 @@
 
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbwOXDMHVLtn9MHEKr3gKZuf_TyPUExLCy5TtEsv9EZvTi9LtzLac-IR7kNj2YEv00oR/exec";
-  let session = null, _cbCount = 0;
+  let session = null, _cbCount = 0, _posGuardada = null;
 
   function callAPI(action, params = {}) {
     return new Promise((resolve, reject) => {
@@ -491,21 +202,18 @@
     });
   }
 
-  // LOGIN → dispara GPS automáticamente
   async function doLogin() {
     const pin = document.getElementById("pin").value.trim();
     const btn = document.getElementById("btn-login");
     if (!pin) { showLoginErr("Ingresa tu PIN para continuar."); return; }
-
     btn.disabled = true;
     btn.innerHTML = '<span class="spin"></span> Verificando...';
     document.getElementById("login-err").style.display = "none";
-
     try {
       const data = await callAPI("login", { pin });
       if (data.ok) {
         session = data;
-        document.getElementById("emp-name-display").textContent = data.nombre;
+        document.getElementById("emp-name-display") && (document.getElementById("emp-name-display").textContent = data.nombre);
         show("s-processing");
         doCheckinAuto();
       } else {
@@ -519,15 +227,15 @@
     }
   }
 
-  // GPS + registro automático
   function doCheckinAuto() {
     if (!navigator.geolocation) {
-      mostrarResultado("error", "GPS no disponible", "Tu dispositivo no soporta geolocalización.", null);
+      mostrarResultado("error", "GPS no disponible", "Tu dispositivo no soporta geolocalización.", null, false);
       return;
     }
     setProc("Obteniendo ubicación GPS...");
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        _posGuardada = pos;
         setProc("Verificando y guardando...");
         try {
           const data = await callAPI("registrar", {
@@ -536,59 +244,86 @@
             lng: pos.coords.longitude,
           });
           if (data.ok) {
-            mostrarResultado(
-              data.primero ? "warn" : "ok",
+            mostrarResultado(data.primero ? "warn" : "ok",
               data.primero ? "Primer registro" : "Registro exitoso",
-              data.msg, data.mapsUrl
-            );
+              data.msg, data.mapsUrl, false);
           } else {
-            mostrarResultado("error", "No registrado", data.msg, null);
+            const puedeAgregar = data.fueraDeRango && data.puedeAgregar;
+            mostrarResultado("error", "No registrado", data.msg, null, puedeAgregar);
           }
         } catch(e) {
-          mostrarResultado("error", "Error de red", e.message, null);
+          mostrarResultado("error", "Error de red", e.message, null, false);
         }
       },
       (gpsErr) => {
-        const msgs = {
-          1: "Permiso de ubicación denegado. Actívalo en tu navegador.",
-          2: "No se pudo obtener la ubicación. Intenta al aire libre.",
-          3: "Tiempo de espera GPS agotado. Intenta de nuevo.",
-        };
-        mostrarResultado("error", "Error GPS", msgs[gpsErr.code] || gpsErr.message, null);
+        const msgs = { 1:"Permiso denegado. Actívalo en tu navegador.", 2:"No se pudo obtener ubicación. Intenta al aire libre.", 3:"Tiempo GPS agotado. Intenta de nuevo." };
+        mostrarResultado("error", "Error GPS", msgs[gpsErr.code] || gpsErr.message, null, false);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   }
 
-  // Muestra resultado + countdown regresa solo
-  function mostrarResultado(tipo, title, msg, mapsUrl) {
-    const res      = document.getElementById("checkin-result");
-    const mapsLink = document.getElementById("cr-maps");
-    res.className  = "result " + tipo;
+  function confirmarAgregarUbicacion() {
+    if (!_posGuardada) return;
+    agregarUbicacion(_posGuardada);
+  }
+
+  async function agregarUbicacion(pos) {
+    show("s-processing");
+    setProc("Registrando nueva ubicación de gym...");
+    try {
+      const data = await callAPI("agregarUbicacion", {
+        pin: session.pin,
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      });
+      mostrarResultado(data.ok ? "ok" : "error",
+        data.ok ? "Ubicación registrada" : "Error",
+        data.msg, data.mapsUrl || null, false);
+    } catch(e) {
+      mostrarResultado("error", "Error de red", e.message, null, false);
+    }
+  }
+
+  function mostrarResultado(tipo, title, msg, mapsUrl, puedeAgregar) {
+    const res        = document.getElementById("checkin-result");
+    const mapsLink   = document.getElementById("cr-maps");
+    const btnAgregar = document.getElementById("btn-agregar");
+    const countWrap  = document.getElementById("countdown-wrap");
+
+    res.className = "result " + tipo;
     document.getElementById("cr-title").textContent = title;
     document.getElementById("cr-msg").textContent   = msg;
+
     if (mapsUrl) { mapsLink.href = mapsUrl; mapsLink.style.display = "inline-flex"; }
     else { mapsLink.style.display = "none"; }
+
+    btnAgregar.style.display = puedeAgregar ? "flex" : "none";
     show("s-result");
 
-    // Countdown 5 segundos
-    let seg = 5;
-    const fill = document.getElementById("countdown-fill");
-    const txt  = document.getElementById("countdown-txt");
-    txt.textContent  = "Regresando en " + seg + "...";
-    fill.style.width = "100%";
-    const iv = setInterval(() => {
-      seg--;
-      txt.textContent  = seg > 0 ? "Regresando en " + seg + "..." : "Regresando...";
-      fill.style.width = (seg / 5 * 100) + "%";
-      if (seg <= 0) { clearInterval(iv); doLogout(); }
-    }, 1000);
+    if (tipo === "ok" || tipo === "warn") {
+      countWrap.style.display = "block";
+      let seg = 5;
+      const fill = document.getElementById("countdown-fill");
+      const txt  = document.getElementById("countdown-txt");
+      fill.style.width = "100%";
+      txt.textContent  = "Regresando en " + seg + "...";
+      const iv = setInterval(() => {
+        seg--;
+        fill.style.width = (seg / 5 * 100) + "%";
+        txt.textContent  = seg > 0 ? "Regresando en " + seg + "..." : "Regresando...";
+        if (seg <= 0) { clearInterval(iv); doLogout(); }
+      }, 1000);
+    } else {
+      countWrap.style.display = "none";
+      document.getElementById("countdown-txt").textContent = "";
+    }
   }
 
   function setProc(msg) { document.getElementById("proc-msg").textContent = msg; }
 
   function doLogout() {
-    session = null;
+    session = null; _posGuardada = null;
     document.getElementById("pin").value = "";
     document.getElementById("login-err").style.display = "none";
     show("s-login");
