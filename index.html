@@ -173,6 +173,20 @@
 
 <footer class="footer">
   <span class="footer-text">v1.0 &nbsp;·&nbsp; Solo uso interno</span>
+  <button id="btn-install" onclick="instalarApp()" style="
+    display:none;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    padding: 6px 14px;
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    cursor: pointer;
+  ">⬇ Instalar app</button>
   <div class="footer-dot"></div>
 </footer>
 
@@ -317,6 +331,37 @@
     err.querySelector(".result-title").textContent = "Error de acceso";
     err.querySelector(".result-msg").textContent   = msg;
     err.style.display = "block";
+  }
+</script>
+<script>
+  // PWA Install
+  let _installPrompt = null;
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    _installPrompt = e;
+    const btn = document.getElementById("btn-install");
+    if (btn) btn.style.display = "block";
+  });
+
+  window.addEventListener("appinstalled", () => {
+    const btn = document.getElementById("btn-install");
+    if (btn) btn.style.display = "none";
+    _installPrompt = null;
+  });
+
+  async function instalarApp() {
+    if (!_installPrompt) {
+      alert("Para instalar:\n\niOS Safari: botón compartir → 'Agregar a inicio'\nChrome escritorio: ícono ⊕ en la barra de direcciones");
+      return;
+    }
+    _installPrompt.prompt();
+    const { outcome } = await _installPrompt.userChoice;
+    if (outcome === "accepted") {
+      const btn = document.getElementById("btn-install");
+      if (btn) btn.style.display = "none";
+    }
+    _installPrompt = null;
   }
 </script>
 <script>
