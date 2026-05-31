@@ -174,7 +174,7 @@
 <footer class="footer">
   <span class="footer-text">v1.0 &nbsp;·&nbsp; Solo uso interno</span>
   <button id="btn-install" onclick="instalarApp()" style="
-    display:none;
+    display:block;
     background: var(--primary);
     color: #fff;
     border: none;
@@ -334,34 +334,33 @@
   }
 </script>
 <script>
-  // PWA Install
   let _installPrompt = null;
 
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     _installPrompt = e;
-    const btn = document.getElementById("btn-install");
-    if (btn) btn.style.display = "block";
   });
 
   window.addEventListener("appinstalled", () => {
-    const btn = document.getElementById("btn-install");
-    if (btn) btn.style.display = "none";
     _installPrompt = null;
   });
 
   async function instalarApp() {
-    if (!_installPrompt) {
-      alert("Para instalar:\n\niOS Safari: botón compartir → 'Agregar a inicio'\nChrome escritorio: ícono ⊕ en la barra de direcciones");
-      return;
+    if (_installPrompt) {
+      // Chrome Android / Desktop — prompt nativo
+      _installPrompt.prompt();
+      await _installPrompt.userChoice;
+      _installPrompt = null;
+    } else {
+      // iOS o navegador sin soporte — instrucciones claras
+      const esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const esSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      if (esIOS || esSafari) {
+        alert("Para instalar en iPhone/iPad:\n\n1. Toca el ícono de compartir (cuadro con flecha) ↑\n2. Desplázate y toca 'Agregar a pantalla de inicio'\n3. Toca 'Agregar'");
+      } else {
+        alert("Para instalar:\n\n1. En la barra de direcciones busca el ícono ⊕ o de descarga\n2. Haz clic en 'Instalar'\n\nSi no aparece, ve al menú ⋮ → 'Instalar aplicación' o 'Agregar a pantalla de inicio'");
+      }
     }
-    _installPrompt.prompt();
-    const { outcome } = await _installPrompt.userChoice;
-    if (outcome === "accepted") {
-      const btn = document.getElementById("btn-install");
-      if (btn) btn.style.display = "none";
-    }
-    _installPrompt = null;
   }
 </script>
 <script>
