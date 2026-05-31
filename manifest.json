@@ -1,0 +1,24 @@
+{
+  "name": "Gym Check-in · Electronics México",
+  "short_name": "Gym Check-in",
+  "description": "Registro de asistencia al gimnasio para empleados de Electronics México",
+  "start_url": "/gym-checkin/",
+  "display": "standalone",
+  "background_color": "#181818",
+  "theme_color": "#da291c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
