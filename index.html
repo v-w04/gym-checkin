@@ -128,10 +128,10 @@
     <div class="panel-label">Identificación</div>
     <div class="panel">
       <input class="pin-input" type="tel" id="pin" maxlength="10"
-             placeholder="Ingresa tu PIN" inputmode="numeric" autocomplete="off"
+             placeholder="Tu PIN" inputmode="numeric" autocomplete="off"
              onkeydown="if(event.key==='Enter') doLogin()">
-      <p class="field-hint">00 + número de empleado &nbsp;·&nbsp; Ej: 001, 0025</p>
-      <button class="btn btn-primary" id="btn-login" onclick="doLogin()">Acceder</button>
+      <p class="field-hint">Tu PIN = 00 + tu número de empleado</p>
+      <button class="btn btn-primary" id="btn-login" onclick="doLogin()">Entrar</button>
     </div>
     <div class="result" id="login-err">
       <div class="result-title">Error de acceso</div>
@@ -213,7 +213,7 @@
       tag.src = API_URL + "?" + new URLSearchParams({ action, callback: cbName, ...params });
       tag.onerror = () => {
         clearTimeout(timeout);
-        setTimeout(() => { if (window[cbName]) reject(new Error("Error de red")); }, 500);
+        setTimeout(() => { if (window[cbName]) reject(new Error("Sin conexión")); }, 500);
       };
       document.head.appendChild(tag);
     });
@@ -222,7 +222,7 @@
   async function doLogin() {
     const pin = document.getElementById("pin").value.trim();
     const btn = document.getElementById("btn-login");
-    if (!pin) { showLoginErr("Ingresa tu PIN para continuar."); return; }
+    if (!pin) { showLoginErr("¡Hola! Ingresa tu PIN para comenzar 👋"); return; }
     btn.disabled = true;
     btn.innerHTML = '<span class="spin"></span> Verificando...';
     document.getElementById("login-err").style.display = "none";
@@ -240,19 +240,19 @@
       showLoginErr("Sin conexión: " + e.message);
     } finally {
       btn.disabled = false;
-      btn.textContent = "Acceder";
+      btn.textContent = "Entrar";
     }
   }
 
   function doCheckinAuto() {
     if (!navigator.geolocation) {
-      mostrarResultado("error", "GPS no disponible", "Tu dispositivo no soporta geolocalización.", null);
+      mostrarResultado("error", "GPS no disponible", "Tu dispositivo no puede detectar tu ubicación. Intenta desde otro celular.", null);
       return;
     }
-    setProc("Obteniendo ubicación GPS...");
+    setProc("Detectando tu ubicación...");
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        setProc("Verificando y guardando...");
+        setProc("Ya casi, registrando tu visita...");
         try {
           const data = await callAPI("registrar", {
             pin: session.pin,
@@ -261,18 +261,18 @@
           });
           if (data.ok) {
             mostrarResultado(data.primero ? "warn" : "ok",
-              data.primero ? "Primer registro" : "Registro exitoso",
+              data.primero ? "¡Bienvenido al sistema! 🎉" : "¡Listo, ya quedaste registrado! 💪",
               data.msg, data.mapsUrl);
           } else {
-            mostrarResultado("error", "No registrado", data.msg, null);
+            mostrarResultado("error", "Acércate un poco más", data.msg, null);
           }
         } catch(e) {
-          mostrarResultado("error", "Error de red", e.message, null);
+          mostrarResultado("error", "Sin conexión", e.message, null);
         }
       },
       (gpsErr) => {
         const msgs = { 1:"Permiso denegado. Actívalo en tu navegador.", 2:"No se pudo obtener ubicación. Intenta al aire libre.", 3:"Tiempo GPS agotado. Intenta de nuevo." };
-        mostrarResultado("error", "Error GPS", msgs[gpsErr.code] || gpsErr.message, null);
+        mostrarResultado("error", "GPS sin señal", msgs[gpsErr.code] || gpsErr.message, null);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
@@ -328,7 +328,7 @@
   function showLoginErr(msg) {
     const err = document.getElementById("login-err");
     err.className = "result error";
-    err.querySelector(".result-title").textContent = "Error de acceso";
+    err.querySelector(".result-title").textContent = "Ups, algo no coincide";
     err.querySelector(".result-msg").textContent   = msg;
     err.style.display = "block";
   }
@@ -347,20 +347,56 @@
 
   async function instalarApp() {
     if (_installPrompt) {
-      // Chrome Android / Desktop — prompt nativo
       _installPrompt.prompt();
       await _installPrompt.userChoice;
       _installPrompt = null;
-    } else {
-      // iOS o navegador sin soporte — instrucciones claras
-      const esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-      const esSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      if (esIOS || esSafari) {
-        alert("Para instalar en iPhone/iPad:\n\n1. Toca el ícono de compartir (cuadro con flecha) ↑\n2. Desplázate y toca 'Agregar a pantalla de inicio'\n3. Toca 'Agregar'");
-      } else {
-        alert("Para instalar:\n\n1. En la barra de direcciones busca el ícono ⊕ o de descarga\n2. Haz clic en 'Instalar'\n\nSi no aparece, ve al menú ⋮ → 'Instalar aplicación' o 'Agregar a pantalla de inicio'");
-      }
+      return;
     }
+    // iOS Safari — única opción real es share sheet
+    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+      mostrarModalInstall();
+      return;
+    }
+    // Chrome — intentar abrir chrome://flags o usar share API
+    if (navigator.share) {
+      navigator.share({
+        title: "Gym Check-in · Electronics México",
+        url: window.location.href
+      });
+      return;
+    }
+    // Último recurso: mostrar modal con instrucciones visuales
+    mostrarModalInstall();
+  }
+
+  function mostrarModalInstall() {
+    // Crear modal de instrucciones visuales
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0 0 20px";
+    const esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    overlay.innerHTML = `
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:16px 16px 0 0;padding:28px 24px;width:100%;max-width:420px;font-family:var(--font)">
+        <div style="width:40px;height:4px;background:#475569;border-radius:2px;margin:0 auto 20px"></div>
+        <div style="font-size:18px;font-weight:700;color:#f8fafc;margin-bottom:16px">Instalar app</div>
+        ${esIOS ? `
+          <div style="color:#94a3b8;font-size:14px;line-height:1.8">
+            <div style="margin-bottom:10px">1. Toca <strong style="color:#f8fafc">compartir</strong> <span style="font-size:18px">⎙</span> en la barra inferior</div>
+            <div style="margin-bottom:10px">2. Busca <strong style="color:#f8fafc">"Agregar a pantalla de inicio"</strong></div>
+            <div>3. Toca <strong style="color:#da291c">Agregar</strong></div>
+          </div>
+        ` : `
+          <div style="color:#94a3b8;font-size:14px;line-height:1.8">
+            <div style="margin-bottom:10px">1. Toca el menú <strong style="color:#f8fafc">⋮</strong> arriba a la derecha</div>
+            <div style="margin-bottom:10px">2. Selecciona <strong style="color:#f8fafc">"Agregar a pantalla de inicio"</strong></div>
+            <div>3. Toca <strong style="color:#da291c">Agregar</strong></div>
+          </div>
+        `}
+        <button onclick="this.closest('div[style]').remove()" style="margin-top:24px;width:100%;height:48px;background:#da291c;color:#fff;border:none;font-family:var(--font);font-size:14px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;cursor:pointer;border-radius:0">
+          Entendido
+        </button>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
   }
 </script>
 <script>
