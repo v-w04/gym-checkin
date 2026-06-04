@@ -99,6 +99,43 @@
     .hero-copy { padding: var(--sp-xxl) var(--sp-xl) var(--sp-lg); }
     .hero-line { left: var(--sp-xl); }
   }
+
+  /* ── Zoom controls — solo en PWA (standalone) ── */
+  .zoom-controls {
+    display: none;
+    position: fixed;
+    bottom: 72px;
+    right: 16px;
+    z-index: 999;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  @media all and (display-mode: standalone) {
+    .zoom-controls { display: flex; }
+  }
+
+  .zoom-btn {
+    width: 40px;
+    height: 40px;
+    background: var(--canvas-elevated);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--ink);
+    font-size: 20px;
+    font-weight: 300;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: background 0.1s;
+    line-height: 1;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .zoom-btn:active { background: var(--primary); }
 </style>
 </head>
 <body>
@@ -193,6 +230,29 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbwOXDMHVLtn9MHEKr3gKZuf_TyPUExLCy5TtEsv9EZvTi9LtzLac-IR7kNj2YEv00oR/exec";
   let session = null, _cbCount = 0;
+
+  // ── Zoom PWA ──
+  let _zoomLevel = parseFloat(localStorage.getItem("pwa_zoom") || "1");
+  
+  function aplicarZoom() {
+    document.body.style.zoom = _zoomLevel;
+    // Para Safari que no soporta zoom
+    document.body.style.transform = "scale(" + _zoomLevel + ")";
+    document.body.style.transformOrigin = "top left";
+    document.body.style.width = (100 / _zoomLevel) + "%";
+  }
+
+  function cambiarZoom(dir) {
+    _zoomLevel = Math.min(2, Math.max(0.7, _zoomLevel + dir * 0.1));
+    _zoomLevel = Math.round(_zoomLevel * 10) / 10;
+    localStorage.setItem("pwa_zoom", _zoomLevel);
+    aplicarZoom();
+  }
+
+  // Aplicar zoom guardado al cargar
+  if (window.matchMedia("(display-mode: standalone)").matches) {
+    aplicarZoom();
+  }
 
   function callAPI(action, params = {}) {
     return new Promise((resolve, reject) => {
@@ -399,6 +459,12 @@
     overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
   }
 </script>
+<!-- Zoom controls para PWA -->
+<div class="zoom-controls" id="zoom-controls">
+  <button class="zoom-btn" onclick="cambiarZoom(1)" title="Aumentar">+</button>
+  <button class="zoom-btn" onclick="cambiarZoom(-1)" title="Reducir">−</button>
+</div>
+
 <script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/gym-checkin/sw.js")
