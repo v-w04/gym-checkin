@@ -21,8 +21,11 @@ self.addEventListener("activate", e => {
 });
 
 self.addEventListener("fetch", e => {
-  // Solo cachear assets propios, no las llamadas a Apps Script
-  if (e.request.url.includes("script.google.com")) return;
+  const url = e.request.url;
+  // Ignorar esquemas no soportados por Cache API
+  if (!url.startsWith("http")) return;
+  // Ignorar llamadas al backend
+  if (url.includes("script.google.com")) return;
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );
